@@ -26,6 +26,39 @@ server.listen(PORT, function(){
 });*/
 
 
+var Server = require('ubk/server');
+//var Client = require('ubk/client/tcp');
+
+var server = new Server();
+//var client = new Client({server_port:port});
+
+//very simple RPC design
+/*client.register_rpc("math", "sum", function(a, b, chain){
+    //heavy computational operation goes here
+  chain(a + b);
+});*/
+
+server.on('base:registered_client', function(device){
+  var device = server.get_client(device.client_key);
+  console.log('DEVICE IS  : ' + device);
+});
+
+server.register_cmd('base', 'send_test', function(args) {
+  console.log('ici', args);
+  server.broadcast('base', 'send_test', {'toto' : 'tata'});
+});
+
+server.start_socket_server(function(){
+  console.log('socket server open');
+});
+
+
+
+
+
+
+
+
 var connect = require('connect');
 var serveStatic = require('serve-static');
 connect().use(serveStatic(__dirname)).listen(8080);
