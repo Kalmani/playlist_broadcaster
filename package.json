@@ -1,0 +1,29 @@
+{
+  "name": "Playlist_broadcaster",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "connect": "^3.4.0",
+    "grunt": "^0.4.5",
+    "grunt-browserify": "^4.0.1",
+    "nyks": "^2.1.1",
+    "serve-static": "^1.10.0",
+    "ubk": "^1.2.0",
+    "uclass": "^2.0.7"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kalmani/playlist_broadcaster.git"
+  },
+  "author": "Florent kolosowski",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Kalmani/playlist_broadcaster/issues"
+  },
+  "homepage": "https://github.com/Kalmani/playlist_broadcaster"
+}
