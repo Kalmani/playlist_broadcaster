@@ -4,7 +4,8 @@ var Server   = require('ubk/server'),
     ffmpeg   = require('../ffmpeg'),
     guid     = require('mout/random/guid'),
     slice    = require('mout/array/slice'),
-    path     = require('path');
+    path     = require('path'),
+    mp4js    = require('mp4js');
 
 var playlist_broadcaster = new Class({
 
@@ -12,6 +13,8 @@ var playlist_broadcaster = new Class({
   
   _INCOMING_PATH : './incomming',
   _OUTPUT_PATH   : './outputs',
+
+  devices : {},
 
   initialize : function() {
 
@@ -23,15 +26,14 @@ var playlist_broadcaster = new Class({
     self.server = new Server();
 
     self.server.on('base:registered_client', function(device){
-      self.device = self.server.get_client(device.client_key);
-      console.log('DEVICE IS  : ' + self.device);
+      self.devices[device.client_key] = self.server.get_client(device.client_key);
+      console.log('DEVICE IS  : ' + self.devices[device.client_key]);
     });
 
     self.broadcaster();
 
     self.server.start_socket_server(function(){
       console.log('socket server open');
-
       self.watch_incomming();
     });
   },
@@ -41,6 +43,11 @@ var playlist_broadcaster = new Class({
 
     self.server.register_cmd('base', 'send_cmd', function(data) {
       self.server.broadcast('base', 'send_cmd', data.args);
+    });
+
+    self.server.register_cmd('base', 'ask_video', function(device, data) {
+      var filepath = './sample_video.mp4';
+      self.launch_video(filepath, data, device); //temp
     });
   },
 
@@ -84,6 +91,11 @@ var playlist_broadcaster = new Class({
     } else {
       self.incomings = [];
     }
+  },
+
+  launch_video : function(filepath, data, device) {
+    var self = this;
+    device.respond(data, {filepath : filepath});
   }
 
 });

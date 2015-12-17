@@ -19,13 +19,15 @@ var Client_Interface = new Class({
   launch_ubk_client : function() {
     self = this;
     self.ubk = new UbkClient('http://' + self.server_url + ':8001');
+    self.register_command();
     self.ubk.connect(self.onconnection , self.ondeconnection);
   },
 
   onconnection : function() {
     self = this;
-    self.register_command();
+
     self.bind_interface();
+    self.ask_video(); // temp
   },
 
   ondeconnection : function() {
@@ -37,6 +39,10 @@ var Client_Interface = new Class({
 
   register_command : function() {
     var self = this;
+
+    self.ubk.register_cmd('base', 'registered_client', function(data) {
+      self.device_key = data.args.client_key;
+    });
 
     self.ubk.register_cmd('base', 'send_cmd', function(data){
       console.log('ici', data);
@@ -88,9 +94,17 @@ var Client_Interface = new Class({
           };
       self.ubk.send('base', 'send_cmd', request, callback);
     });
+  },
 
+  ask_video : function() {
+    var self = this;
+    self.ubk.send('base', 'ask_video', {}, function(data) {
+      document.getElementById('video').src = data.filepath;
+      document.getElementById('video').play();
+    });
   }
 
 });
-
-var ui_controller = new Client_Interface();
+document.addEventListener('DOMContentLoaded', function(){
+  var ui_controller = new Client_Interface();
+});
