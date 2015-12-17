@@ -27,7 +27,7 @@ var Client_Interface = new Class({
     self = this;
 
     self.bind_interface();
-    self.ask_video(); // temp
+    self.ask_playlist();
   },
 
   ondeconnection : function() {
@@ -49,15 +49,15 @@ var Client_Interface = new Class({
       if (!data.args)
         return;
       if (data.args.play) {
-        document.getElementById('video').play();
+        document.getElement('#video').play();
       }
       if (data.args.switch) {
-        document.getElementById('video').src = "./outputs/input_mpg.mp4";
-        document.getElementById('video').play();
+        document.getElement('#video').src = "./outputs/input_mpg.mp4";
+        document.getElement('#video').play();
       }
       if (data.args.go_to) {
-        document.getElementById('video').currentTime = data.args.go_to;
-        document.getElementById('video').play();
+        document.getElement('#video').currentTime = data.args.go_to;
+        document.getElement('#video').play();
       }
     });
   },
@@ -65,7 +65,7 @@ var Client_Interface = new Class({
   bind_interface : function() {
     var self = this;
     var dom = document;
-    dom.getElementById('play').addEventListener('click', function() {
+    dom.getElement('#play').addEvent('click', function() {
       var callback = function() {
             console.log('its ok');
           },
@@ -75,7 +75,7 @@ var Client_Interface = new Class({
       self.ubk.send('base', 'send_cmd', request, callback);
     });
 
-    dom.getElementById('switch').addEventListener('click', function() {
+    dom.getElement('#switch').addEvent('click', function() {
       var callback = function() {
             console.log('its ok');
           },
@@ -85,7 +85,7 @@ var Client_Interface = new Class({
       self.ubk.send('base', 'send_cmd', request, callback);
     });
 
-    dom.getElementById('go_to').addEventListener('click', function() {
+    dom.getElementById('go_to').addEvent('click', function() {
       var callback = function() {
             console.log('its ok');
           },
@@ -96,15 +96,28 @@ var Client_Interface = new Class({
     });
   },
 
-  ask_video : function() {
+  ask_playlist : function() {
     var self = this;
-    self.ubk.send('base', 'ask_video', {}, function(data) {
-      document.getElementById('video').src = data.filepath;
-      document.getElementById('video').play();
+    self.ubk.send('base', 'ask_playlist', {}, function(data) {
+      var playlist = document.getElement('#playlists');
+      playlist.innerHTML = data.dom;
+
+      playlist.getElements('.play_video').addEvent('click', function() {
+        // go through server to prepare control device
+        self.ask_video(this.get('rel'));
+      });
+    });
+  },
+
+  ask_video : function(filepath) {
+    var self = this;
+    self.ubk.send('base', 'ask_video', {filepath : filepath}, function(data) {
+      document.getElement('#video').src = data.filepath;
+      document.getElement('#video').play();
     });
   }
 
 });
-document.addEventListener('DOMContentLoaded', function(){
+document.addEvent('DOMContentLoaded', function(){
   var ui_controller = new Client_Interface();
 });

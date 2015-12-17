@@ -5,6 +5,7 @@ var Server   = require('ubk/server'),
     guid     = require('mout/random/guid'),
     slice    = require('mout/array/slice'),
     path     = require('path'),
+    fs       = require('fs'),
     mp4js    = require('mp4js');
 
 var playlist_broadcaster = new Class({
@@ -46,8 +47,11 @@ var playlist_broadcaster = new Class({
     });
 
     self.server.register_cmd('base', 'ask_video', function(device, data) {
-      var filepath = './sample_video.mp4';
-      self.launch_video(filepath, data, device); //temp
+      self.launch_video(device, data); //temp
+    });
+
+    self.server.register_cmd('base', 'ask_playlist', function(device, data) {
+      self.send_playlist(device, data);
     });
   },
 
@@ -93,11 +97,21 @@ var playlist_broadcaster = new Class({
     }
   },
 
-  launch_video : function(filepath, data, device) {
+  launch_video : function(device, data) {
     var self = this;
+    var filepath = data.args.filepath;
     device.respond(data, {filepath : filepath});
-  }
+  },
 
+  send_playlist : function(device, data) {
+    var playlist = JSON.parse(fs.readFileSync('./playlists/playlist_1.json', 'utf8'));
+    var dom = "";
+
+    for (var i = 0; i < playlist.videos.length; i++) {
+      dom += '<span class="play_video" rel="' + playlist.videos[i] + '">' + playlist.videos[i] + '</span><br />';
+    }
+    device.respond(data, {'dom' : dom});
+  }
 });
 
 module.exports = playlist_broadcaster;
