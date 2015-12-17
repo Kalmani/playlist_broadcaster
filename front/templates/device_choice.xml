@@ -1,10 +1,10 @@
 <mustache>
 <script type="text/template" id="device_choice">
   <div id="choose_controler">
-    Controler
+    <i class="fa fa-wifi" style="font-size:60;"> </i>
   </div>
   <div id="choose_screen">
-    Screen
+    <i class="fa fa-television" style="font-size:60;"> </i>
   </div>
 </script>
 </mustache>
