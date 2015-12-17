@@ -11,18 +11,28 @@ var ondeconnection = function() {
 };
 
 var onconnection = function(ubk) {
-  console.log('onconnection ?');
   register_command(ubk);
 };
 
-ubk.connect(function() { console.log('CONNECTED ?'); onconnection(ubk); } , ondeconnection);
+function register_command(ubk) {
+  ubk.register_cmd('base', 'send_cmd', function(data){
+    console.log('ici', data);
+    if (!data.args)
+      return;
+    if (data.args.play) {
+      document.getElementById('video').play();
+    }
+  });
+}
 
-document.getElementById('test').addEventListener('click', function() {
+ubk.connect(function() { onconnection(ubk); } , ondeconnection);
+
+document.getElementById('play').addEventListener('click', function() {
   var callback = function() {
         console.log('its ok');
       },
       request = {
-        'its' : 'a trap'
+        'play' : 'current'
       };
-  ubk.send('base', 'send_test', request, callback);
+  ubk.send('base', 'send_cmd', request, callback);
 });

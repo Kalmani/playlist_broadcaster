@@ -43,9 +43,8 @@ server.on('base:registered_client', function(device){
   console.log('DEVICE IS  : ' + device);
 });
 
-server.register_cmd('base', 'send_test', function(args) {
-  console.log('ici', args);
-  server.broadcast('base', 'send_test', {'toto' : 'tata'});
+server.register_cmd('base', 'send_cmd', function(data) {
+  server.broadcast('base', 'send_cmd', data.args);
 });
 
 server.start_socket_server(function(){
