@@ -1,61 +1,8 @@
-/*//Lets require/import the HTTP module
-var http = require('http');
-var dispatcher = require('httpdispatcher');
-//Lets define a port we want to listen to
-const PORT = 8080; 
+var playlist_broadcaster = require('./libs/playlist_broadcaster/');
 
-//We need a function which handles requests and send response
-function handleRequest(request, response){
-  try {
-    //log the request on console
-    console.log(request.url);
-    //Disptach
-    dispatcher.dispatch(request, response);
-  } catch(err) {
-    console.log(err);
-  }
-}
+var playlist = new playlist_broadcaster();
 
-//Create a server
-var server = http.createServer(handleRequest);
-
-//Lets start our server
-server.listen(PORT, function(){
-    //Callback triggered when server is successfully listening. Hurray!
-    console.log("Server listening on: http://localhost:%s", PORT, '127.0.0.1');
-});*/
-
-
-var Server = require('ubk/server');
-//var Client = require('ubk/client/tcp');
-
-var server = new Server();
-//var client = new Client({server_port:port});
-
-//very simple RPC design
-/*client.register_rpc("math", "sum", function(a, b, chain){
-    //heavy computational operation goes here
-  chain(a + b);
-});*/
-
-server.on('base:registered_client', function(device){
-  var device = server.get_client(device.client_key);
-  console.log('DEVICE IS  : ' + device);
-});
-
-server.register_cmd('base', 'send_cmd', function(data) {
-  server.broadcast('base', 'send_cmd', data.args);
-});
-
-server.start_socket_server(function(){
-  console.log('socket server open');
-});
-
-
-
-
-
-
+playlist.launch();
 
 
 var connect = require('connect');
