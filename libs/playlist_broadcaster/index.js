@@ -100,7 +100,8 @@ var playlist_broadcaster = new Class({
   launch_video : function(device, data) {
     var self = this;
     var filepath = data.args.filepath;
-    device.respond(data, {filepath : filepath});
+    self.server.broadcast('base', 'launch_video', {filepath : filepath});
+    //device.respond(data, {filepath : filepath});
   },
 
   send_playlist : function(device, data) {

@@ -1,0 +1,10 @@
+<mustache>
+<script type="text/template" id="control_screen">
+  <div>
+    <div id="playlists"></div>
+    <span id="play">play video</span><br />
+    <span id="switch">Switch</span><br />
+    <span id="go_to">Go to 20 sec</span>
+  </div>
+</script>
+</mustache>

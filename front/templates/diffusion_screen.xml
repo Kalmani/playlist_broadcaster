@@ -1,0 +1,9 @@
+<mustache>
+<script type="text/template" id="diffusion_screen">
+  <div>
+    <video width="100%" height="100%" controls="true" id="video">
+      <source src="" type="video/mp4" />
+    </video>
+  </div>
+</script>
+</mustache>

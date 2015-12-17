@@ -2,3 +2,4 @@ node_modules
 scripts_compiled.js
 incomming/*
 outputs/*
+templates.xml

@@ -1,19 +1,38 @@
 var UbkClient  = require('./node_modules/ubk/client/ws'),
     Class      = require('uclass'),
-    Events     = require('uclass/events');
+    Events     = require('uclass/events'),
+    Mustache   = require('mustache');
+
+XMLDocument.prototype.xpath = function(query, ctx) {
+  var out = [],
+      result = this.evaluate(query, ctx || this, null, XPathResult.ANY_TYPE, null),
+      current = result.iterateNext();
+  while (current) {
+    out.push(current);
+    current = result.iterateNext();
+  }
+  return out;
+};
 
 
 var Client_Interface = new Class({
 
+  Implements : [Events],
+
   Binds : ['onconnection', 'ondeconnection'],
+
+  templates : {},
 
   initialize : function() {
     var self = this;
 
     self.server_url = document.location.hostname;
+    self.mustache = Mustache;
 
     self.launch_ubk_client();
-
+    self.addEvent('init', function() {
+      self.build_interface();
+    });
   },
 
   launch_ubk_client : function() {
@@ -25,9 +44,7 @@ var Client_Interface = new Class({
 
   onconnection : function() {
     self = this;
-
-    self.bind_interface();
-    self.ask_playlist();
+    self.load_templates();
   },
 
   ondeconnection : function() {
@@ -42,6 +59,11 @@ var Client_Interface = new Class({
 
     self.ubk.register_cmd('base', 'registered_client', function(data) {
       self.device_key = data.args.client_key;
+    });
+
+    self.ubk.register_cmd('base', 'launch_video', function(data) {
+      document.getElement('#video').src = data.args.filepath;
+      document.getElement('#video').play();
     });
 
     self.ubk.register_cmd('base', 'send_cmd', function(data){
@@ -59,6 +81,51 @@ var Client_Interface = new Class({
         document.getElement('#video').currentTime = data.args.go_to;
         document.getElement('#video').play();
       }
+    });
+  },
+
+  load_templates : function() {
+    var self = this;
+    new Request({
+      url : 'templates.xml',
+      onSuccess : function(txt, xml) {
+        var serializer = new XMLSerializer();
+
+        Array.each(xml.xpath("//script[@type='text/template']"), function(node) {
+          var str = "";
+          Array.each(node.childNodes, function(child) {
+            str += serializer.serializeToString(child);
+          });
+          self.templates[node.getAttribute('id')] = str;
+        });
+
+        self.fireEvent('init');
+      }
+    }).get();
+  },
+
+  render : function(id, ctx) {
+    var self = this;
+    var tpl = self.templates[id];
+    var dom = self.mustache.render(tpl, ctx || null);
+    return new Element('div', {'html' : dom});
+  },
+
+  build_interface : function() {
+    var self = this;
+    var dom = self.render('device_choice');
+    dom.inject(document.body);
+
+    dom.getElement('#choose_controler').addEvent('click', function() {
+      var dom = self.render('control_screen');
+      dom.inject(document.body.empty());
+      self.bind_interface();
+      self.ask_playlist();
+    });
+
+    dom.getElement('#choose_screen').addEvent('click', function() {
+      var dom = self.render('diffusion_screen');
+      dom.inject(document.body.empty());
     });
   },
 
@@ -111,10 +178,11 @@ var Client_Interface = new Class({
 
   ask_video : function(filepath) {
     var self = this;
-    self.ubk.send('base', 'ask_video', {filepath : filepath}, function(data) {
+    self.ubk.send('base', 'ask_video', {filepath : filepath});
+    /*, function(data) {
       document.getElement('#video').src = data.filepath;
       document.getElement('#video').play();
-    });
+    }*/
   }
 
 });

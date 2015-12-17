@@ -1,0 +1,10 @@
+<mustache>
+<script type="text/template" id="device_choice">
+  <div id="choose_controler">
+    Controler
+  </div>
+  <div id="choose_screen">
+    Screen
+  </div>
+</script>
+</mustache>
