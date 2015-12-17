@@ -3,7 +3,8 @@ var Server   = require('ubk/server'),
     chokidar = require('chokidar'),
     ffmpeg   = require('../ffmpeg'),
     guid     = require('mout/random/guid'),
-    slice    = require('mout/array/slice');
+    slice    = require('mout/array/slice'),
+    path     = require('path');
 
 var playlist_broadcaster = new Class({
 
@@ -72,16 +73,17 @@ var playlist_broadcaster = new Class({
       self.timer = setInterval(self.scan_incommings, 2000);
       return;
     }
-      var output_file = guid() + '.mp4';
-      var encode = new ffmpeg(self.incomings[0], output_path + output_file, function() {
-        self.timer = setInterval(self.scan_incommings, 2000);
-      });
+    var output_file = path.basename(self.incomings[0]).replace(path.extname(self.incomings[0]), '.mp4');
 
-      if (self.incomings[1]) {
-        self.incomings = slice(self.incomings, 1);
-      } else {
-        self.incomings = [];
-      }
+    var encode = new ffmpeg(self.incomings[0], output_path + output_file, function() {
+      self.timer = setInterval(self.scan_incommings, 2000);
+    });
+
+    if (self.incomings[1]) {
+      self.incomings = slice(self.incomings, 1);
+    } else {
+      self.incomings = [];
+    }
   }
 
 });
