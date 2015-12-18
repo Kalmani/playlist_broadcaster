@@ -1,6 +1,7 @@
 node_modules
 front/app.js
 front/browserified.js
+front/theme/main.css
 incomming/*
 outputs/*
 templates.xml
