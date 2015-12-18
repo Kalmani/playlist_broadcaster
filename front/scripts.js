@@ -1,4 +1,4 @@
-var UbkClient  = require('./node_modules/ubk/client/ws'),
+var UbkClient  = require('../node_modules/ubk/client/ws'),
     Class      = require('uclass'),
     Events     = require('uclass/events'),
     Mustache   = require('mustache');

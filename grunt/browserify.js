@@ -14,7 +14,7 @@ module.exports = function(grunt) {
 
     pack : {
       files: {
-        'scripts_compiled.js': ['scripts.js'],
+        'front/app.js': ['front/scripts.js'],
       }
     }
   });
