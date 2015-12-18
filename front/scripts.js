@@ -114,12 +114,12 @@ var Client_Interface = new Class({
   build_interface : function() {
     var self = this;
     var dom = self.render('device_choice');
-    dom.inject(document.body);
+    dom.inject(document.body.empty());
 
     dom.getElement('#choose_controler').addEvent('click', function() {
       var dom = self.render('control_screen');
       dom.inject(document.body.empty());
-      self.bind_interface();
+      self.bind_controls(dom);
       self.ask_playlist();
     });
 
@@ -129,38 +129,43 @@ var Client_Interface = new Class({
     });
   },
 
-  bind_interface : function() {
+  bind_controls : function(dom) {
     var self = this;
-    var dom = document;
-    dom.getElement('#play').addEvent('click', function() {
-      var callback = function() {
-            console.log('its ok');
-          },
-          request = {
-            'play' : 'current'
-          };
-      self.ubk.send('base', 'send_cmd', request, callback);
-    });
 
-    dom.getElement('#switch').addEvent('click', function() {
-      var callback = function() {
-            console.log('its ok');
-          },
-          request = {
-            'switch' : true
-          };
-      self.ubk.send('base', 'send_cmd', request, callback);
-    });
+    if (dom.getElement('#play')) {
+      dom.getElement('#play').addEvent('click', function() {
+        var callback = function() {
+              console.log('its ok');
+            },
+            request = {
+              'play' : 'current'
+            };
+        self.ubk.send('base', 'send_cmd', request, callback);
+      });
+    }
 
-    dom.getElementById('go_to').addEvent('click', function() {
-      var callback = function() {
-            console.log('its ok');
-          },
-          request = {
-            'go_to' : 20
-          };
-      self.ubk.send('base', 'send_cmd', request, callback);
-    });
+    if (dom.getElement('#switch')) {
+      dom.getElement('#switch').addEvent('click', function() {
+        var callback = function() {
+              console.log('its ok');
+            },
+            request = {
+              'switch' : true
+            };
+        self.ubk.send('base', 'send_cmd', request, callback);
+      });
+    }
+    if (dom.getElement('#go_to')) {
+      dom.getElement('#go_to').addEvent('click', function() {
+        var callback = function() {
+              console.log('its ok');
+            },
+            request = {
+              'go_to' : 20
+            };
+        self.ubk.send('base', 'send_cmd', request, callback);
+      });
+    }
   },
 
   ask_playlist : function() {

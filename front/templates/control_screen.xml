@@ -1,10 +1,33 @@
 <mustache>
 <script type="text/template" id="control_screen">
   <div>
-    <div id="playlists"></div>
-    <span id="play">play video</span><br />
-    <span id="switch">Switch</span><br />
-    <span id="go_to">Go to 20 sec</span>
+    <div class="row">
+      <div class="col-md-4">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Playlist</h3>
+          </div>
+          <div class="panel-body">
+            <div id="playlists">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-8">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Controls test</h3>
+          </div>
+          <div class="panel-body">
+            <ul>
+              <li id="play">play video</li>
+              <li id="go_to">Go to 20 sec</li>
+            </ul>
+            <!--<span id="switch">Switch</span><br />-->
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </script>
 </mustache>
