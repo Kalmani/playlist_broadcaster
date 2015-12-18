@@ -12,10 +12,12 @@ var playlist_broadcaster = new Class({
 
   Binds : ['scan_incommings'],
   
-  _INCOMING_PATH : './incomming',
-  _OUTPUT_PATH   : './outputs/',
+  _INCOMING_PATH    : './incomming',
+  _OUTPUT_PATH      : './outputs/',
+  _PLAYLISTS_PATH   : './playlists/',
+  _DEFAULT_PLAYLIST : 'playlist_default.json',
 
-  is_encrypting  : false,
+  is_encrypting     : false,
 
   devices : {},
 
@@ -102,9 +104,9 @@ var playlist_broadcaster = new Class({
 
   push_default_playlist : function(output_file, callback) {
     var self = this,
-        playlist = JSON.parse(fs.readFileSync('./playlists/playlist_default.json', 'utf8'));
+        playlist = JSON.parse(fs.readFileSync(self._PLAYLISTS_PATH + self._DEFAULT_PLAYLIST, 'utf8'));
     playlist.videos.push(self._OUTPUT_PATH + output_file);
-    fs.writeFileSync('./playlists/playlist_default.json', JSON.stringify(playlist, null, 2), {'encoding' : 'utf8'});
+    fs.writeFileSync(self._PLAYLISTS_PATH + self._DEFAULT_PLAYLIST, JSON.stringify(playlist, null, 2), {'encoding' : 'utf8'});
     callback();
   },
 
@@ -116,7 +118,8 @@ var playlist_broadcaster = new Class({
   },
 
   send_playlist : function(device, data) {
-    var playlist = JSON.parse(fs.readFileSync('./playlists/playlist_default.json', 'utf8')),
+    var self = this,
+        playlist = JSON.parse(fs.readFileSync(self._PLAYLISTS_PATH + self._DEFAULT_PLAYLIST, 'utf8')),
         dom = "";
 
     for (var i = 0; i < playlist.videos.length; i++) {
