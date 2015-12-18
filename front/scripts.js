@@ -144,21 +144,21 @@ var Client_Interface = new Class({
       self.ubk.send('base', 'send_cmd', {'play' : true}, function() {});
       dom.getElement('#is_pause').setStyle('display', 'none');
       dom.getElement('#is_playing').setStyle('display', 'inline-block');
-      self.progress_timer = setInterval(self.update_progress, 1000);
+      //self.progress_timer = setInterval(self.update_progress, 1000);
     });
     dom.getElement('#is_playing').addEvent('click', function() {
       self.ubk.send('base', 'send_cmd', {'play' : false}, function() {});
       dom.getElement('#is_playing').setStyle('display', 'none');
       dom.getElement('#is_pause').setStyle('display', 'inline-block');
-      clearInterval(self.progress_timer);
+      //clearInterval(self.progress_timer);
     });
 
     /*dom.getElement('#go_to').addEvent('click', function() {
       self.ubk.send('base', 'send_cmd', {'go_to' : 20}, function() {});
     });*/
-    self.progress_bar = dom.getElement('#progress_time'),
+    /*self.progress_bar = dom.getElement('#progress_time'),
     self.current_time  = 0;
-    self.progress_timer = setInterval(self.update_progress, 1000);
+    self.progress_timer = setInterval(self.update_progress, 1000);*/
 
     dom.getElements('.change').addEvent('click', function() {
       var direction = this.get('rel'),
