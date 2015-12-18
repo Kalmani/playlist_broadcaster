@@ -2,10 +2,10 @@
 <script type="text/template" id="device_choice">
   <div class="site-wrapper">
     <div class="site-wrapper-inner">
-      <div id="choose_controler" class="col-md-6">
+      <div id="choose_controler" class="col-xs-6">
         <i class="fa fa-gamepad"> </i>
       </div>
-      <div id="choose_screen" class="col-md-6">
+      <div id="choose_screen" class="col-xs-6">
         <i class="fa fa-desktop"> </i>
       </div>
     </div>

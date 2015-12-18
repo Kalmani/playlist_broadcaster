@@ -123,7 +123,9 @@ var playlist_broadcaster = new Class({
         dom = "";
 
     for (var i = 0; i < playlist.videos.length; i++) {
-      dom += '<span class="play_video" rel="' + playlist.videos[i] + '">' + playlist.videos[i] + '</span><br />';
+      var filename = playlist.videos[i].replace(self._OUTPUT_PATH, '');
+      filename = filename.slice(0, -4);
+      dom += '<li class="play_video" rel="' + playlist.videos[i] + '">' + filename + '</li>';
     }
     device.respond(data, {'dom' : dom});
   }

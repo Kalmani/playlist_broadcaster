@@ -67,11 +67,14 @@ var Client_Interface = new Class({
     });
 
     self.ubk.register_cmd('base', 'send_cmd', function(data){
-      console.log('ici', data);
       if (!data.args)
         return;
-      if (data.args.play) {
-        document.getElement('#video').play();
+      if (data.args.play !== undefined) {
+        if (data.args.play === true) {
+          document.getElement('#video').play();
+        } else {
+          document.getElement('#video').pause();
+        }
       }
       if (data.args.switch) {
         document.getElement('#video').src = "./outputs/input_mpg.mp4";
@@ -119,7 +122,6 @@ var Client_Interface = new Class({
     dom.getElement('#choose_controler').addEvent('click', function() {
       var dom = self.render('control_screen');
       dom.inject(document.body.empty());
-      self.bind_controls(dom);
       self.ask_playlist();
     });
 
@@ -131,41 +133,19 @@ var Client_Interface = new Class({
 
   bind_controls : function(dom) {
     var self = this;
-
-    if (dom.getElement('#play')) {
-      dom.getElement('#play').addEvent('click', function() {
-        var callback = function() {
-              console.log('its ok');
-            },
-            request = {
-              'play' : 'current'
-            };
-        self.ubk.send('base', 'send_cmd', request, callback);
-      });
-    }
-
-    if (dom.getElement('#switch')) {
-      dom.getElement('#switch').addEvent('click', function() {
-        var callback = function() {
-              console.log('its ok');
-            },
-            request = {
-              'switch' : true
-            };
-        self.ubk.send('base', 'send_cmd', request, callback);
-      });
-    }
-    if (dom.getElement('#go_to')) {
-      dom.getElement('#go_to').addEvent('click', function() {
-        var callback = function() {
-              console.log('its ok');
-            },
-            request = {
-              'go_to' : 20
-            };
-        self.ubk.send('base', 'send_cmd', request, callback);
-      });
-    }
+    dom.getElement('#is_pause').addEvent('click', function() {
+      self.ubk.send('base', 'send_cmd', {'play' : true}, function() {});
+      dom.getElement('#is_pause').setStyle('display', 'none');
+      dom.getElement('#is_playing').setStyle('display', 'inline-block');
+    });
+    dom.getElement('#is_playing').addEvent('click', function() {
+      self.ubk.send('base', 'send_cmd', {'play' : false}, function() {});
+      dom.getElement('#is_playing').setStyle('display', 'none');
+      dom.getElement('#is_pause').setStyle('display', 'inline-block');
+    });
+    /*dom.getElement('#go_to').addEvent('click', function() {
+      self.ubk.send('base', 'send_cmd', {'go_to' : 20}, function() {});
+    });*/
   },
 
   ask_playlist : function() {
@@ -175,6 +155,8 @@ var Client_Interface = new Class({
       playlist.innerHTML = data.dom;
 
       playlist.getElements('.play_video').addEvent('click', function() {
+        playlist.getElements('.play_video').removeClass('active');
+        this.addClass('active');
         // go through server to prepare control device
         self.ask_video(this.get('rel'));
       });
@@ -184,10 +166,16 @@ var Client_Interface = new Class({
   ask_video : function(filepath) {
     var self = this;
     self.ubk.send('base', 'ask_video', {filepath : filepath});
-    /*, function(data) {
-      document.getElement('#video').src = data.filepath;
-      document.getElement('#video').play();
-    }*/
+    self.add_control_panel();
+  },
+
+  add_control_panel : function() {
+    var self = this,
+        dom = self.render('actions_list'),
+        container = document.getElement('#actions_list').empty();
+    dom.inject(container);
+
+    self.bind_controls(dom);
   }
 
 });
