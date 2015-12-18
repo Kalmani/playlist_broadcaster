@@ -19,7 +19,7 @@ var Client_Interface = new Class({
 
   Implements : [Events],
 
-  Binds : ['onconnection', 'ondeconnection'],
+  Binds : ['onconnection', 'ondeconnection', 'update_progress'],
 
   templates : {},
 
@@ -144,12 +144,21 @@ var Client_Interface = new Class({
       self.ubk.send('base', 'send_cmd', {'play' : true}, function() {});
       dom.getElement('#is_pause').setStyle('display', 'none');
       dom.getElement('#is_playing').setStyle('display', 'inline-block');
+      self.progress_timer = setInterval(self.update_progress, 1000);
     });
     dom.getElement('#is_playing').addEvent('click', function() {
       self.ubk.send('base', 'send_cmd', {'play' : false}, function() {});
       dom.getElement('#is_playing').setStyle('display', 'none');
       dom.getElement('#is_pause').setStyle('display', 'inline-block');
+      clearInterval(self.progress_timer);
     });
+
+    /*dom.getElement('#go_to').addEvent('click', function() {
+      self.ubk.send('base', 'send_cmd', {'go_to' : 20}, function() {});
+    });*/
+    self.progress_bar = dom.getElement('#progress_time'),
+    self.current_time  = 0;
+    self.progress_timer = setInterval(self.update_progress, 1000);
 
     dom.getElements('.change').addEvent('click', function() {
       var direction = this.get('rel'),
@@ -174,9 +183,32 @@ var Client_Interface = new Class({
         }
       }
     });
-    /*dom.getElement('#go_to').addEvent('click', function() {
-      self.ubk.send('base', 'send_cmd', {'go_to' : 20}, function() {});
-    });*/
+  },
+
+  update_progress : function() {
+    var self = this;
+    self.current_time++;
+
+    var purcent = parseInt((100 / self.total_time) * self.current_time);
+    self.progress_bar.setStyle('width', purcent + '%');
+
+    if (purcent < 100) return;
+
+    clearInterval(self.progress_timer);
+
+
+    // USE EVENT STOP ON VIDEO INSTEAD
+    var current = null,
+        videos = document.getElements('.play_video');
+    for (var i = 0; i < videos.length; i++) {
+      if (videos[i].get('rel') == self.playing)
+        current = videos[i];
+    }
+    if (current.getNext()) {
+      $(current.getNext()).click();
+    } else {
+      $(videos[0]).click();
+    }
   },
 
   ask_playlist : function() {

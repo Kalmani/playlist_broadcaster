@@ -18,6 +18,10 @@
     <i class="fa fa-play-circle-o" id="is_pause" style="display:none;"> </i>
     <i class="fa fa-pause-circle-o" id="is_playing"> </i>
     <i class="fa fa-fast-forward change" rel="forward"> </i>
+    <div class="progress">
+      <div class="progress-bar progress-bar-success" id="progress_time" role="progressbar" style="width: 0.0001%">
+      </div>
+    </div>
   </div>
 </script>
 </mustache>
