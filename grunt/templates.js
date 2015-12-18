@@ -9,7 +9,7 @@ var toArray = function(nodelist) {
 
 module.exports = function(grunt) {
   grunt.config('concat.templates', {
-    dest:'templates.xml',
+    dest:'front/templates.xml',
     src: [ 'front/templates/**/*.xml'],
     options: {
       separator: '',

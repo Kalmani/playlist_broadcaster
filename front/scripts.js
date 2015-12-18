@@ -87,7 +87,7 @@ var Client_Interface = new Class({
   load_templates : function() {
     var self = this;
     new Request({
-      url : 'templates.xml',
+      url : 'front/templates.xml',
       onSuccess : function(txt, xml) {
         var serializer = new XMLSerializer();
 
