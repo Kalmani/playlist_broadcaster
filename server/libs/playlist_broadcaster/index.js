@@ -15,6 +15,8 @@ var playlist_broadcaster = new Class({
   _INCOMING_PATH : './incomming',
   _OUTPUT_PATH   : './outputs',
 
+  is_encrypting  : false,
+
   devices : {},
 
   initialize : function() {
@@ -66,35 +68,33 @@ var playlist_broadcaster = new Class({
       switch (event) {
         case 'add' :
           self.incomings.push(path);
+          self.scan_incommings();
           break;
       }
     });
-
-    self.timer = setInterval(self.scan_incommings, 2000);
-
   },
 
   scan_incommings : function() {
     var self = this;
-    console.log('start scaning...');
     var output_path = './outputs/';
 
-    clearInterval(self.timer);
-    if (!self.incomings[0]) {
-      self.timer = setInterval(self.scan_incommings, 2000);
+    //nothing to encrypt
+    if (!self.incomings[0])
       return;
-    }
+    //already encrypting
+    if (self.is_encrypting == true)
+      return;
+
     var output_file = path.basename(self.incomings[0]).replace(path.extname(self.incomings[0]), '.mp4');
 
+    self.is_encrypting = true;
+
     var encode = new ffmpeg(self.incomings[0], output_path + output_file, function() {
-      self.timer = setInterval(self.scan_incommings, 2000);
+      self.incomings = (self.incomings[1]) ? slice(self.incomings, 1) : [];
+      self.is_encrypting = false;
+      self.scan_incommings();
     });
 
-    if (self.incomings[1]) {
-      self.incomings = slice(self.incomings, 1);
-    } else {
-      self.incomings = [];
-    }
   },
 
   launch_video : function(device, data) {
