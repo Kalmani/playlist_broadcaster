@@ -13,7 +13,7 @@ var playlist_broadcaster = new Class({
   Binds : ['scan_incommings'],
   
   _INCOMING_PATH : './incomming',
-  _OUTPUT_PATH   : './outputs',
+  _OUTPUT_PATH   : './outputs/',
 
   is_encrypting  : false,
 
@@ -76,7 +76,6 @@ var playlist_broadcaster = new Class({
 
   scan_incommings : function() {
     var self = this;
-    var output_path = './outputs/';
 
     //nothing to encrypt
     if (!self.incomings[0])
@@ -89,12 +88,24 @@ var playlist_broadcaster = new Class({
 
     self.is_encrypting = true;
 
-    var encode = new ffmpeg(self.incomings[0], output_path + output_file, function() {
+    var encode = new ffmpeg(self.incomings[0], self._OUTPUT_PATH + output_file, function(exit_code) {
+      if (exit_code != 0)
+        console.log('An error occured while encrypting file : ' + self.incomings[0]);
       self.incomings = (self.incomings[1]) ? slice(self.incomings, 1) : [];
-      self.is_encrypting = false;
-      self.scan_incommings();
-    });
 
+      self.push_default_playlist(output_file, function() {
+        self.is_encrypting = false;
+        self.scan_incommings();
+      });
+    });
+  },
+
+  push_default_playlist : function(output_file, callback) {
+    var self = this,
+        playlist = JSON.parse(fs.readFileSync('./playlists/playlist_default.json', 'utf8'));
+    playlist.videos.push(self._OUTPUT_PATH + output_file);
+    fs.writeFileSync('./playlists/playlist_default.json', JSON.stringify(playlist, null, 2), {'encoding' : 'utf8'});
+    callback();
   },
 
   launch_video : function(device, data) {
@@ -105,8 +116,8 @@ var playlist_broadcaster = new Class({
   },
 
   send_playlist : function(device, data) {
-    var playlist = JSON.parse(fs.readFileSync('./playlists/playlist_1.json', 'utf8'));
-    var dom = "";
+    var playlist = JSON.parse(fs.readFileSync('./playlists/playlist_default.json', 'utf8')),
+        dom = "";
 
     for (var i = 0; i < playlist.videos.length; i++) {
       dom += '<span class="play_video" rel="' + playlist.videos[i] + '">' + playlist.videos[i] + '</span><br />';

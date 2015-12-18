@@ -2,6 +2,7 @@ node_modules
 front/app.js
 front/browserified.js
 front/theme/main.css
+samples/
 incomming/*
 outputs/*
 templates.xml

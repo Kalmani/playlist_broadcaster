@@ -4,14 +4,37 @@ var cp    = require('child_process'),
 
 var ffmpeg = new Class({
 
+  Binds : ['delete_file', 'encrypt'],
+
   _EXEC : "ffmpeg",
 
   initialize : function(input_file, output_path, callback) {
     var self = this;
-    console.log('Start converting file ' + input_file + '...');
+
+    self.input_file = input_file;
+    self.output_path = output_path;
+    self.callback = callback;
+
+    fs.exists(output_path, function (exists) {
+      (exists ? self.delete_file() : self.encrypt());
+    });
+
+  },
+
+  delete_file : function() {
+    var self = this;
+    console.log('delete encrypted file and rebuild it... [' + self.output_path + ']');
+    fs.unlinkSync(self.output_path);
+    self.encrypt();
+  },
+
+  encrypt : function() {
+    var self = this;
+
+    console.log('Start converting file ' + self.input_file + '...');
     var args = [
       '-i',
-      input_file, //.avi
+      self.input_file, //.avi
       '-c:v',
       'libx264',
       '-crf',
@@ -26,7 +49,7 @@ var ffmpeg = new Class({
       '192k',
       '-ac',
       '2',
-      output_path
+      self.output_path
     ];
 
     var cmd = cp.spawn(self._EXEC, args);
@@ -37,8 +60,9 @@ var ffmpeg = new Class({
 
     cmd.on('close', function (code) {
       console.log('child process exited with code ' + code);
-      fs.unlink(input_file);
-      callback();
+      if (code == 0)
+        fs.unlink(self.input_file);
+      self.callback(code);
     });
   }
 });
