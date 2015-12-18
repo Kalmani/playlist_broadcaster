@@ -23,6 +23,10 @@ var Client_Interface = new Class({
 
   templates : {},
 
+  playing : null,
+
+  device_type : null,
+
   initialize : function() {
     var self = this;
 
@@ -62,6 +66,7 @@ var Client_Interface = new Class({
     });
 
     self.ubk.register_cmd('base', 'launch_video', function(data) {
+      if (self.device_type != 'screen') return;
       document.getElement('#video').src = data.args.filepath;
       document.getElement('#video').play();
     });
@@ -120,12 +125,14 @@ var Client_Interface = new Class({
     dom.inject(document.body.empty());
 
     dom.getElement('#choose_controler').addEvent('click', function() {
+      self.device_type = 'controler';
       var dom = self.render('control_screen');
       dom.inject(document.body.empty());
       self.ask_playlist();
     });
 
     dom.getElement('#choose_screen').addEvent('click', function() {
+      self.device_type = 'screen';
       var dom = self.render('diffusion_screen');
       dom.inject(document.body.empty());
     });
@@ -142,6 +149,30 @@ var Client_Interface = new Class({
       self.ubk.send('base', 'send_cmd', {'play' : false}, function() {});
       dom.getElement('#is_playing').setStyle('display', 'none');
       dom.getElement('#is_pause').setStyle('display', 'inline-block');
+    });
+
+    dom.getElements('.change').addEvent('click', function() {
+      var direction = this.get('rel'),
+          current = null,
+          videos = document.getElements('.play_video');
+      for (var i = 0; i < videos.length; i++) {
+        if (videos[i].get('rel') == self.playing)
+          current = videos[i];
+      }
+
+      if (direction == 'backward') {
+        if (current.getPrevious()) {
+          $(current.getPrevious()).click();
+        } else {
+          $(videos[(videos.length - 1)]).click();
+        }
+      } else {
+        if (current.getNext()) {
+          $(current.getNext()).click();
+        } else {
+          $(videos[0]).click();
+        }
+      }
     });
     /*dom.getElement('#go_to').addEvent('click', function() {
       self.ubk.send('base', 'send_cmd', {'go_to' : 20}, function() {});
@@ -166,6 +197,7 @@ var Client_Interface = new Class({
   ask_video : function(filepath) {
     var self = this;
     self.ubk.send('base', 'ask_video', {filepath : filepath});
+    self.playing = filepath;
     self.add_control_panel();
   },
 

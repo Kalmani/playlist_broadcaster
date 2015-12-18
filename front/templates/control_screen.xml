@@ -14,10 +14,10 @@
 </script>
 <script type="text/template" id="actions_list">
   <div class="actions_container">
-    <i class="fa fa-fast-backward"> </i>
+    <i class="fa fa-fast-backward change" rel="backward"> </i>
     <i class="fa fa-play-circle-o" id="is_pause" style="display:none;"> </i>
     <i class="fa fa-pause-circle-o" id="is_playing"> </i>
-    <i class="fa fa-fast-forward"> </i>
+    <i class="fa fa-fast-forward change" rel="forward"> </i>
   </div>
 </script>
 </mustache>
