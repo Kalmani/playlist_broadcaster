@@ -5,8 +5,7 @@ var Server   = require('ubk/server'),
     guid     = require('mout/random/guid'),
     slice    = require('mout/array/slice'),
     path     = require('path'),
-    fs       = require('fs'),
-    mp4js    = require('mp4js');
+    fs       = require('fs');
 
 var playlist_broadcaster = new Class({
 
@@ -22,7 +21,7 @@ var playlist_broadcaster = new Class({
   devices : {},
 
   initialize : function() {
-
+    this.ffmpeg = new ffmpeg();
   },
 
   launch : function() {
@@ -90,7 +89,7 @@ var playlist_broadcaster = new Class({
 
     self.is_encrypting = true;
 
-    var encode = new ffmpeg(self.incomings[0], self._OUTPUT_PATH + output_file, function(exit_code) {
+    var encode = self.ffmpeg.encode(self.incomings[0], self._OUTPUT_PATH + output_file, function(exit_code) {
       if (exit_code != 0)
         console.log('An error occured while encrypting file : ' + self.incomings[0]);
       self.incomings = (self.incomings[1]) ? slice(self.incomings, 1) : [];
@@ -113,8 +112,19 @@ var playlist_broadcaster = new Class({
   launch_video : function(device, data) {
     var self = this;
     var filepath = data.args.filepath;
-    self.server.broadcast('base', 'launch_video', {filepath : filepath});
-    //device.respond(data, {filepath : filepath});
+
+    self.ffmpeg.get_duration(filepath, function(err, str) {
+      if (!err) {
+        var time    = str.split('.')[0].replace('Duration: ', ''),
+            hours   = parseInt(time.split(':')[0]),
+            minutes = parseInt(time.split(':')[1]),
+            seconds = parseInt(time.split(':')[2]),
+            total   = seconds + (60 * minutes) + (3600 * hours);
+
+        self.server.broadcast('base', 'launch_video', {filepath : filepath});
+        device.respond(data, {total_time : total});
+      }
+    });
   },
 
   send_playlist : function(device, data) {

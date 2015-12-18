@@ -8,7 +8,11 @@ var ffmpeg = new Class({
 
   _EXEC : "ffmpeg",
 
-  initialize : function(input_file, output_path, callback) {
+  initialize : function() {
+
+  },
+
+  encode : function(input_file, output_path, callback) {
     var self = this;
 
     self.input_file = input_file;
@@ -64,6 +68,16 @@ var ffmpeg = new Class({
         fs.unlink(self.input_file);
       self.callback(code);
     });
+  },
+
+  get_duration : function(filepath, callback) {
+    var self = this,
+        child = cp.exec(self._EXEC + " -i " + filepath + " 2>&1 | grep Duration", function (err, stdout, stderr) {
+          if (err !== null) {
+            callback(err, false);
+          }
+          callback(null, stdout);
+        });
   }
 });
 

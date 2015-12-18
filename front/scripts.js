@@ -196,9 +196,12 @@ var Client_Interface = new Class({
 
   ask_video : function(filepath) {
     var self = this;
-    self.ubk.send('base', 'ask_video', {filepath : filepath});
+    self.ubk.send('base', 'ask_video', {filepath : filepath}, function(data) {
+      console.log('ici', data);
+      self.total_time = data.total_time;
+      self.add_control_panel();
+    });
     self.playing = filepath;
-    self.add_control_panel();
   },
 
   add_control_panel : function() {
