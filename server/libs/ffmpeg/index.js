@@ -33,9 +33,7 @@ var ffmpeg = new Class({
   },
 
   encrypt : function() {
-    var self = this,
-        out = fs.openSync('logs/out.log', 'a'),
-        err = fs.openSync('logs/err.log', 'a');;
+    var self = this;
 
     console.log('Start converting file ' + self.input_file + '...');
     var args = [
@@ -45,22 +43,16 @@ var ffmpeg = new Class({
       'h264',
       '-ac',
       '2',
-      '-t',
-      '15',
       self.output_path
     ];
 
     var cmd = cp.spawn(self._EXEC, args, {
       detached: true,
-      stdio: [ 'ignore', out, err ]
+      stdio: ['ignore', 'ignore', 'ignore']
     });
 
     cmd.on('error', function (err) {
       console.log('Failed to start child process. ' + err);
-    });
-
-    cmd.stdout.on('data', function (data) {
-      console.log('stdout: ' + data);
     });
 
     cmd.on('close', function (code) {
