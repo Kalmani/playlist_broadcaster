@@ -43,6 +43,8 @@ var ffmpeg = new Class({
       'h264',
       '-ac',
       '2',
+      '-t',
+      '15',
       self.output_path
     ];
 

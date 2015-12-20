@@ -128,7 +128,7 @@ var Client_Interface = new Class({
       self.device_type = 'controler';
       var dom = self.render('control_screen');
       dom.inject(document.body.empty());
-      self.ask_playlist();
+      self.ask_playlists();
     });
 
     dom.getElement('#choose_screen').addEvent('click', function() {
@@ -211,24 +211,30 @@ var Client_Interface = new Class({
     }
   },
 
-  ask_playlist : function() {
+  ask_playlists : function() {
     var self = this;
-    self.ubk.send('base', 'ask_playlist', {}, function(data) {
+    self.ubk.send('base', 'ask_playlists', {}, function(data) {
+      console.log('ici', data);
       var playlist = document.getElement('#playlists');
       playlist.innerHTML = data.dom;
 
-      playlist.getElements('.play_video').addEvent('click', function() {
-        playlist.getElements('.play_video').removeClass('active');
+      playlist.getElements('.laungh_video').addEvent('click', function() {
+        playlist.getElements('.laungh_video').removeClass('active');
         this.addClass('active');
-        // go through server to prepare control device
-        self.ask_video(this.get('rel'));
+        self.laungh_video(this.get('rel'));
+      });
+
+      playlist.getElements('.show_playlist').addEvent('click', function() {
+        playlist.getElements('.show_playlist').removeClass('active');
+        this.addClass('active');
+        self.ask_playlists(this.get('rel'));
       });
     });
   },
 
-  ask_video : function(filepath) {
+  ask_playlists : function(filepath) {
     var self = this;
-    self.ubk.send('base', 'ask_video', {filepath : filepath}, function(data) {
+    self.ubk.send('base', 'ask_playlists', {filepath : filepath}, function(data) {
       console.log('ici', data);
       self.total_time = data.total_time;
       self.add_control_panel();

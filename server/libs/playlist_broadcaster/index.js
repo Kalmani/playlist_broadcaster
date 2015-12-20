@@ -5,16 +5,17 @@ var Server   = require('ubk/server'),
     guid     = require('mout/random/guid'),
     slice    = require('mout/array/slice'),
     path     = require('path'),
-    fs       = require('fs');
+    fs       = require('fs'),
+    md5File  = require('md5-file');
 
 var playlist_broadcaster = new Class({
 
   Binds : ['scan_incommings'],
   
   _INCOMING_PATH    : './incomming',
-  _OUTPUT_PATH      : './outputs/',
-  _PLAYLISTS_PATH   : './playlists/',
-  _DEFAULT_PLAYLIST : 'playlist_default.json',
+  _ROOT_PATH        : './outputs/',
+  _OUTPUT_PATH      : './outputs/fresh/',
+  _PLAYLIST_NAME    : 'playlist.json',
 
   is_encrypting     : false,
 
@@ -49,12 +50,8 @@ var playlist_broadcaster = new Class({
       self.server.broadcast('base', 'send_cmd', data.args);
     });
 
-    self.server.register_cmd('base', 'ask_video', function(device, data) {
-      self.launch_video(device, data); //temp
-    });
-
-    self.server.register_cmd('base', 'ask_playlist', function(device, data) {
-      self.send_playlist(device, data);
+    self.server.register_cmd('base', 'ask_playlists', function(device, data) {
+      self.send_playlist_list(device, data);
     });
   },
 
@@ -68,11 +65,20 @@ var playlist_broadcaster = new Class({
       console.log(event, path);
       switch (event) {
         case 'add' :
-          self.incomings.push(path);
-          self.scan_incommings();
+          self.check_file_update(path);
+          break;
+        case 'change' :
+          console.log('ici', path);
           break;
       }
     });
+  },
+
+  check_file_update : function(path) {
+    var self = this;
+    // check hre if file is still copying
+    self.incomings.push(path);
+    self.scan_incommings();
   },
 
   scan_incommings : function() {
@@ -94,19 +100,33 @@ var playlist_broadcaster = new Class({
         console.log('An error occured while encrypting file : ' + self.incomings[0]);
       self.incomings = (self.incomings[1]) ? slice(self.incomings, 1) : [];
 
-      self.push_default_playlist(output_file, function() {
+      self.push_incomming_playlist(output_file, function() {
         self.is_encrypting = false;
         self.scan_incommings();
       });
     });
   },
 
-  push_default_playlist : function(output_file, callback) {
+  push_incomming_playlist : function(output_file, callback) {
     var self = this,
-        playlist = JSON.parse(fs.readFileSync(self._PLAYLISTS_PATH + self._DEFAULT_PLAYLIST, 'utf8'));
-    playlist.videos.push(self._OUTPUT_PATH + output_file);
-    fs.writeFileSync(self._PLAYLISTS_PATH + self._DEFAULT_PLAYLIST, JSON.stringify(playlist, null, 2), {'encoding' : 'utf8'});
+        playlist = JSON.parse(fs.readFileSync(self._OUTPUT_PATH + self._PLAYLIST_NAME, 'utf8')),
+        md5 = md5File(self._OUTPUT_PATH + output_file);
+
+    if (playlist.videos[md5])
+      delete playlist.videos[md5];
+
+    playlist.videos[md5] = {
+      'path'      : self._OUTPUT_PATH + output_file,
+      'real_name' : output_file
+    };
+
+    fs.writeFileSync(self._OUTPUT_PATH + self._PLAYLIST_NAME, JSON.stringify(playlist, null, 2), {'encoding' : 'utf8'});
     callback();
+  },
+
+  ask_childrens : function(device, data) {
+    console.log('data is');
+    console.log(data.args.filepath);
   },
 
   launch_video : function(device, data) {
@@ -127,17 +147,40 @@ var playlist_broadcaster = new Class({
     });
   },
 
-  send_playlist : function(device, data) {
+  send_playlist_list : function(device, data) {
     var self = this,
-        playlist = JSON.parse(fs.readFileSync(self._PLAYLISTS_PATH + self._DEFAULT_PLAYLIST, 'utf8')),
+        playlist_list = fs.readdirSync(self._ROOT_PATH),
         dom = "";
 
-    for (var i = 0; i < playlist.videos.length; i++) {
-      var filename = playlist.videos[i].replace(self._OUTPUT_PATH, '');
-      filename = filename.slice(0, -4);
-      dom += '<li class="play_video" rel="' + playlist.videos[i] + '">' + filename + '</li>';
+    if (data.parent_playlist) {
+      // filter by parent
     }
+
+    for (var i = 0; i < playlist_list.length; i++) {
+      if (fs.lstatSync(self._ROOT_PATH + playlist_list[i]).isDirectory())
+        dom += self.sub_playlist(self._ROOT_PATH + playlist_list[i]);
+    }
+
+    try {
+      var current_playlist = JSON.parse(fs.readFileSync(self._ROOT_PATH + '/' + self._PLAYLIST_NAME, 'utf8'));
+      console.log(current_playlist);
+    } catch (e) {
+      console.log('no playlist for directory ' + self._ROOT_PATH);
+    }
+
     device.respond(data, {'dom' : dom});
+  },
+
+  sub_playlist : function(playlist_path) {
+    var self = this,
+        playlist_infos = JSON.parse(fs.readFileSync(playlist_path + '/' + self._PLAYLIST_NAME, 'utf8'));
+
+    return '<li class="show_playlist" rel="' + playlist_path + '"><i class="fa fa-list"></i> ' + playlist_infos.name + '</li>';
+  },
+
+  show_video : function() {
+    var self = this;
+    return '<li class="laungh_video" rel=""><i class="fa fa-play"></i> toto.mp4</li>';
   }
 });
 
