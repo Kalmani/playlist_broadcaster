@@ -40,17 +40,7 @@ var ffmpeg = new Class({
       '-i',
       self.input_file, //.avi
       '-c:v',
-      'libx264',
-      '-crf',
-      '25',
-      '-preset',
-      'slow',
-      '-c:a',
-      'aac',
-      '-strict',
-      'experimental',
-      '-b:a',
-      '192k',
+      'h264',
       '-ac',
       '2',
       self.output_path
