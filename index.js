@@ -1,1 +1,2 @@
+require('mootools');
 require('./server/');

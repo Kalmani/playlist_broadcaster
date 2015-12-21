@@ -18,14 +18,12 @@ XMLDocument.prototype.xpath = function(query, ctx) {
 var Client_Interface = new Class({
 
   Implements : [Events],
+  Binds      : ['onconnection', 'ondeconnection', 'update_progress'],
 
-  Binds : ['onconnection', 'ondeconnection', 'update_progress'],
-
-  templates : {},
-
-  playing : null,
-
+  templates   : {},
+  playing     : null,
   device_type : null,
+  _ROOT_PATH  : './outputs',
 
   initialize : function() {
     var self = this;
@@ -67,7 +65,9 @@ var Client_Interface = new Class({
 
     self.ubk.register_cmd('base', 'launch_video', function(data) {
       if (self.device_type != 'screen') return;
-      document.getElement('#video').src = data.args.filepath;
+
+      console.log(data);
+      document.getElement('#video').src = data.args.path;
       document.getElement('#video').play();
     });
 
@@ -211,17 +211,20 @@ var Client_Interface = new Class({
     }
   },
 
-  ask_playlists : function() {
+  ask_playlists : function(path) {
     var self = this;
-    self.ubk.send('base', 'ask_playlists', {}, function(data) {
-      console.log('ici', data);
+
+    if (!path)
+      path = self._ROOT_PATH;
+
+    self.ubk.send('base', 'ask_playlists', {'path' : path}, function(data) {
       var playlist = document.getElement('#playlists');
       playlist.innerHTML = data.dom;
 
-      playlist.getElements('.laungh_video').addEvent('click', function() {
-        playlist.getElements('.laungh_video').removeClass('active');
+      playlist.getElements('.launch_video').addEvent('click', function() {
+        playlist.getElements('.launch_video').removeClass('active');
         this.addClass('active');
-        self.laungh_video(this.get('rel'));
+        self.launch_video(this.get('rel'));
       });
 
       playlist.getElements('.show_playlist').addEvent('click', function() {
@@ -232,14 +235,8 @@ var Client_Interface = new Class({
     });
   },
 
-  ask_playlists : function(filepath) {
-    var self = this;
-    self.ubk.send('base', 'ask_playlists', {filepath : filepath}, function(data) {
-      console.log('ici', data);
-      self.total_time = data.total_time;
-      self.add_control_panel();
-    });
-    self.playing = filepath;
+  launch_video : function(path) {
+    self.ubk.send('base', 'launch_video', {'path' : path});
   },
 
   add_control_panel : function() {

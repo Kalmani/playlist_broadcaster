@@ -13,6 +13,7 @@
     "grunt-contrib-watch": "^0.6.1",
     "id3js": "^1.1.3",
     "md5-file": "^2.0.4",
+    "mootools": "^1.5.2",
     "mout": "^0.11.1",
     "mp4js": "0.0.2",
     "mustache": "^2.2.1",
