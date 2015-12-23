@@ -1,14 +1,11 @@
 <mustache>
 <script type="text/template" id="control_screen">
   <div>
-    <div class="row">
-      <div class="col-md-4 col-xs-4">
-        <ul id="playlists">
-        </ul>
-      </div>
-      <div class="col-md-8 col-xs-8" id="actions_list">
-        <!--<span id="switch">Switch</span><br />-->
-      </div>
+    <div class="col-md-5 col-xs-5" id="playlists_container">
+
+    </div>
+    <div class="col-md-7 col-xs-7" id="actions_list">
+      <div id="videos_container"> </div>
     </div>
   </div>
 </script>
@@ -22,6 +19,15 @@
       <div class="progress-bar progress-bar-success" id="progress_time" role="progressbar" style="width: 0.0001%">
       </div>
     </div>
+  </div>
+</script>
+<script type="text/template" id="playlists_list">
+  <div>
+    <ul id="playlists">
+      {{#playlists}}
+      <li class="show_playlist" rel="{{playlist_path}}"><i class="fa fa-list"> </i> {{name}}</li>
+      {{/playlists}}
+    </ul>
   </div>
 </script>
 </mustache>

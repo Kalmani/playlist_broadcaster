@@ -1,0 +1,11 @@
+<mustache>
+<script type="text/template" id="videos_list">
+  <div>
+    <ul id="videos_list">
+      {{#videos}}
+      <li class="launch_video" rel="{{path}}"><i class="fa fa-play"> </i> {{name}}</li>
+      {{/videos}}
+    </ul>
+  </div>
+</script>
+</mustache>

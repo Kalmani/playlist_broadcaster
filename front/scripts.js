@@ -221,24 +221,26 @@ var Client_Interface = new Class({
       path = self._ROOT_PATH;
 
     self.ubk.send('base', 'ask_playlists', {'path' : path}, function(data) {
-      var playlist = document.getElement('#playlists');
-
-      playlist.innerHTML = data.dom;
+      var playlist = self.render('playlists_list', {'playlists' : data.playlists});
 
       if (pointer)
         playlist.getElement('[rel=' + path + pointer + ']').addClass('fresh');
-
-      playlist.getElements('.launch_video').addEvent('click', function() {
-        playlist.getElements('.launch_video').removeClass('active');
-        this.addClass('active');
-        self.launch_video(this.get('rel'));
-      });
 
       playlist.getElements('.show_playlist').addEvent('click', function() {
         playlist.getElements('.show_playlist').removeClass('active');
         this.addClass('active');
         self.ask_playlists(this.get('rel'));
       });
+
+      var videos = self.render('videos_list', {'videos' : data.videos});
+      videos.getElements('.launch_video').addEvent('click', function() {
+        videos.getElements('.launch_video').removeClass('active');
+        this.addClass('active');
+        self.launch_video(this.get('rel'));
+      });
+
+      playlist.inject(document.getElement('#playlists_container').empty());
+      videos.inject(document.getElement('#videos_container').empty());
     });
   },
 
