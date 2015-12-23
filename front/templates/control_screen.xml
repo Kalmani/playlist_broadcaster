@@ -6,6 +6,7 @@
     </div>
     <div class="col-md-7 col-xs-7" id="actions_list">
       <div id="videos_container"> </div>
+      <div id="actions_container"> </div>
     </div>
   </div>
 </script>
@@ -25,7 +26,14 @@
   <div>
     <ul id="playlists">
       {{#playlists}}
-      <li class="show_playlist" rel="{{playlist_path}}"><i class="fa fa-list"> </i> {{name}}</li>
+      <li class="show_playlist" rel="{{playlist_path}}">
+      {{#back}}
+        <i class="fa fa-reply"> </i>
+      {{/back}}
+      {{^back}}
+        <i class="fa fa-list"> </i>
+      {{/back}}
+       {{name}}</li>
       {{/playlists}}
     </ul>
   </div>
