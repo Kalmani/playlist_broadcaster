@@ -13,7 +13,7 @@ var playlist_broadcaster = new Class({
   Binds : ['scan_incommings'],
   
   _INCOMING_PATH    : './incomming',
-  _ROOT_PATH        : './outputs/',
+  _ROOT_PATH        : './outputs',
   _OUTPUT_PATH      : './outputs/fresh/',
   _PLAYLIST_NAME    : 'playlist.json',
 
@@ -57,6 +57,14 @@ var playlist_broadcaster = new Class({
     self.server.register_cmd('base', 'launch_video', function(device, data) {
       self.launch_video(device, data);
     });
+
+    self.server.register_cmd('base', 'send_current_time', function(device, data) {
+      self.server.broadcast('base', 'send_current_time', {current_time : data.args.current_time});
+    });
+
+    self.server.register_cmd('base', 'go_to', function(device, data) {
+      self.server.broadcast('base', 'send_cmd', {go_to : data.args.current_time});
+    })
   },
 
   watch_incomming : function() {
@@ -65,11 +73,11 @@ var playlist_broadcaster = new Class({
 
     self.incomings = [];
 
-    chokidar.watch(self._INCOMING_PATH, {ignored: /[\/\\]\./}).on('all', function(event, path){
-      console.log(event, path);
+    chokidar.watch(self._INCOMING_PATH, {ignored: /[\/\\]\./}).on('all', function(event, filepath){
+      console.log(event, filepath);
       switch (event) {
         case 'change' :
-          self.incomings.push(path);
+          self.incomings.push(filepath);
           self.scan_incommings();
           break;
       }
@@ -127,9 +135,9 @@ var playlist_broadcaster = new Class({
 
   launch_video : function(device, data) {
     var self = this;
-    var path = data.args.path;
+    var video_path = data.args.path;
 
-    self.ffmpeg.get_duration(path, function(err, str) {
+    self.ffmpeg.get_duration(video_path, function(err, str) {
       if (!err) {
         var time    = str.split('.')[0].replace('Duration: ', ''),
             hours   = parseInt(time.split(':')[0]),
@@ -137,7 +145,7 @@ var playlist_broadcaster = new Class({
             seconds = parseInt(time.split(':')[2]),
             total   = seconds + (60 * minutes) + (3600 * hours);
 
-        self.server.broadcast('base', 'launch_video', {path : path});
+        self.server.broadcast('base', 'launch_video', {path : video_path});
         device.respond(data, {total_time : total});
       }
     });
@@ -145,26 +153,28 @@ var playlist_broadcaster = new Class({
 
   send_playlist_list : function(device, data) {
     var self = this,
-        path = (data.args.path || self._ROOT_PATH),
-        playlist_list = fs.readdirSync(path),
+        playlist_path = (data.args.path || self._ROOT_PATH),
+        playlist_list = fs.readdirSync(playlist_path),
         result = {
           'playlists' : [],
           'videos'    : []
         };
+    if (playlist_path !== self._ROOT_PATH) {
+      var path_array = playlist_path.split('/');
+      result.playlists.push({'playlist_path' : path_array.slice(0, -1).join('/'), 'name' : 'retour', 'back' : 'true'});
+    }
 
     for (var i = 0; i < playlist_list.length; i++) {
-      if (fs.lstatSync(path + '/' + playlist_list[i]).isDirectory())
-        result.playlists.push(self.sub_playlist(path + '/' + playlist_list[i]));
+      if (fs.lstatSync(playlist_path + '/' + playlist_list[i]).isDirectory())
+        result.playlists.push(self.sub_playlist(playlist_path + '/' + playlist_list[i]));
     }
     try {
-      var current_playlist = JSON.parse(fs.readFileSync(path + '/' + self._PLAYLIST_NAME, 'utf8'));
-      console.log(current_playlist.videos);
+      var current_playlist = JSON.parse(fs.readFileSync(playlist_path + '/' + self._PLAYLIST_NAME, 'utf8'));
       Object.each(current_playlist.videos, function(video_data, key) {
-        console.log(key);
         result.videos.push(self.show_video(key, video_data));
       });
     } catch (e) {
-      console.log('no playlist for directory ' + path);
+      console.log('no playlist for directory ' + playlist_path);
     }
 
     device.respond(data, result);
