@@ -68,21 +68,12 @@ var playlist_broadcaster = new Class({
     chokidar.watch(self._INCOMING_PATH, {ignored: /[\/\\]\./}).on('all', function(event, path){
       console.log(event, path);
       switch (event) {
-        case 'add' :
-          self.check_file_update(path);
-          break;
         case 'change' :
-          console.log('ici', path);
+          self.incomings.push(path);
+          self.scan_incommings();
           break;
       }
     });
-  },
-
-  check_file_update : function(path) {
-    var self = this;
-    // check hre if file is still copying
-    self.incomings.push(path);
-    self.scan_incommings();
   },
 
   scan_incommings : function() {
@@ -104,7 +95,8 @@ var playlist_broadcaster = new Class({
         console.log('An error occured while encrypting file : ' + self.incomings[0]);
       self.incomings = (self.incomings[1]) ? slice(self.incomings, 1) : [];
 
-      self.push_incomming_playlist(output_file, function() {
+      self.push_incomming_playlist(output_file, function(md5) {
+        self.server.broadcast('base', 'incomming_video', {'playlist_path' : self._OUTPUT_PATH, 'filename' : output_file});
         self.is_encrypting = false;
         self.scan_incommings();
       });
@@ -125,7 +117,7 @@ var playlist_broadcaster = new Class({
     };
 
     fs.writeFileSync(self._OUTPUT_PATH + self._PLAYLIST_NAME, JSON.stringify(playlist, null, 2), {'encoding' : 'utf8'});
-    callback();
+    callback(md5);
   },
 
   ask_childrens : function(device, data) {
