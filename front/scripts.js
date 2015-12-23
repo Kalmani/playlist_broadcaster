@@ -63,10 +63,13 @@ var Client_Interface = new Class({
       self.device_key = data.args.client_key;
     });
 
+    self.ubk.register_cmd('base', 'incomming_video', function(data) {
+      if (self.device_type != 'controler') return;
+      self.ask_playlists(data.args.playlist_path, data.args.filename);
+    });
+
     self.ubk.register_cmd('base', 'launch_video', function(data) {
       if (self.device_type != 'screen') return;
-
-      console.log(data);
       document.getElement('#video').src = data.args.path;
       document.getElement('#video').play();
     });
@@ -211,7 +214,7 @@ var Client_Interface = new Class({
     }
   },
 
-  ask_playlists : function(path) {
+  ask_playlists : function(path, pointer) {
     var self = this;
 
     if (!path)
@@ -219,7 +222,11 @@ var Client_Interface = new Class({
 
     self.ubk.send('base', 'ask_playlists', {'path' : path}, function(data) {
       var playlist = document.getElement('#playlists');
+
       playlist.innerHTML = data.dom;
+
+      if (pointer)
+        playlist.getElement('[rel=' + path + pointer + ']').addClass('fresh');
 
       playlist.getElements('.launch_video').addEvent('click', function() {
         playlist.getElements('.launch_video').removeClass('active');

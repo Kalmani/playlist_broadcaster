@@ -66,6 +66,10 @@ html, body {
   padding: 5px 10px;
 }
 
+#playlists li.fresh {
+  background-color: #CCC;
+}
+
 #playlists li.active {
   background-color: #222222;
   color: #13F004;
