@@ -1,4 +1,4 @@
-var Server   = require('ubk/server'),
+var Server   = require('ubk_v2/server'),
     Class    = require('uclass'),
     chokidar = require('chokidar'),
     ffmpeg   = require('../ffmpeg'),

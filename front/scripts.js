@@ -1,4 +1,4 @@
-var UbkClient  = require('../node_modules/ubk/client/ws'),
+var UbkClient  = require('ubk_v2/client/ws'),
     Class      = require('uclass'),
     Events     = require('uclass/events'),
     Mustache   = require('mustache');
@@ -41,9 +41,9 @@ var Client_Interface = new Class({
 
   launch_ubk_client : function() {
     self = this;
-    self.ubk = new UbkClient('http://' + self.server_url + ':8001');
+    self.ubk = new UbkClient({});
     self.register_command();
-    self.ubk.connect(self.onconnection , self.ondeconnection);
+    self.ubk.connect(self.onconnection , self.ondeconnection, 'http://' + self.server_url + ':8001');
   },
 
   onconnection : function() {
