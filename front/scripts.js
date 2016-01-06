@@ -41,9 +41,9 @@ var Client_Interface = new Class({
 
   launch_ubk_client : function() {
     self = this;
-    self.ubk = new UbkClient({});
+    self.ubk = new UbkClient();
     self.register_command();
-    self.ubk.connect(self.onconnection , self.ondeconnection, 'http://' + self.server_url + ':8001');
+    self.ubk.connect(self.onconnection , self.ondeconnection , 'http://' + self.server_url + ':8080');
   },
 
   onconnection : function() {

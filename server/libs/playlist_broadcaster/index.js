@@ -21,8 +21,9 @@ var playlist_broadcaster = new Class({
 
   devices : {},
 
-  initialize : function() {
+  initialize : function(server) {
     this.ffmpeg = new ffmpeg();
+    this.httpServer = server;
   },
 
   launch : function() {
@@ -37,10 +38,9 @@ var playlist_broadcaster = new Class({
 
     self.broadcaster();
 
-    self.server.start_socket_server(function(){
-      console.log('socket server open');
-      self.watch_incomming();
-    });
+    self.server.start_socket_server(this.httpServer , "/");
+    self.watch_incomming();
+
   },
 
   broadcaster : function() {
