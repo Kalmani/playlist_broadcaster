@@ -44,20 +44,22 @@ html, body {
 }
 
 
-#playlists {
+#playlists, #videos_list {
   display: block;
-  width: 50%;
-  margin: 15% auto 0 auto;
-  height: 70%;
   overflow: auto;
-  border-top: solid 2px #13F004;
-  border-bottom: solid 2px #13F004;
+  border: solid 2px #13F004;
   list-style: none;
   padding: 10px 0px;
+  -webkit-box-shadow: inset 7px 7px 40px 3px rgba(26,23,26,1);
+  -moz-box-shadow: inset 7px 7px 40px 3px rgba(26,23,26,1);
+  box-shadow: inset 7px 7px 40px 3px rgba(26,23,26,1);
 }
 
+#playlists_container, #actions_list {
+  margin-top: 15px;
+}
 
-#playlists li {
+#playlists li, #videos_list li {
   display: block;
   content: #13F004;
   color: #FFF;
@@ -66,13 +68,17 @@ html, body {
   padding: 5px 10px;
 }
 
-#playlists li.active {
+#videos_list li.fresh {
+  background-color: #CCC;
+}
+
+#videos_list li.active {
   background-color: #222222;
   color: #13F004;
 }
 
 
-#playlists li:hover {
+#playlists li:hover, #videos_list li:hover {
   background-color: #222222;
 }
 

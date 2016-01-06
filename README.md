@@ -1,3 +1,3 @@
 # playlist_broadcaster
 
-Waiting for update @ubk
+use ubk as git project branch v2

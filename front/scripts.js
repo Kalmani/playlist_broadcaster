@@ -1,4 +1,4 @@
-var UbkClient  = require('../node_modules/ubk/client/ws'),
+var UbkClient  = require('ubk_v2/client/ws'),
     Class      = require('uclass'),
     Events     = require('uclass/events'),
     Mustache   = require('mustache');
@@ -18,14 +18,14 @@ XMLDocument.prototype.xpath = function(query, ctx) {
 var Client_Interface = new Class({
 
   Implements : [Events],
+  Binds      : ['onconnection', 'ondeconnection', 'update_progress'],
 
-  Binds : ['onconnection', 'ondeconnection', 'update_progress'],
-
-  templates : {},
-
-  playing : null,
-
+  templates   : {},
+  playing     : null,
+  timer       : null,
   device_type : null,
+  videoStatus : false,
+  _ROOT_PATH  : './outputs',
 
   initialize : function() {
     var self = this;
@@ -41,9 +41,9 @@ var Client_Interface = new Class({
 
   launch_ubk_client : function() {
     self = this;
-    self.ubk = new UbkClient('http://' + self.server_url + ':8001');
+    self.ubk = new UbkClient();
     self.register_command();
-    self.ubk.connect(self.onconnection , self.ondeconnection);
+    self.ubk.connect(self.onconnection , self.ondeconnection , 'http://' + self.server_url + ':8080');
   },
 
   onconnection : function() {
@@ -65,29 +65,54 @@ var Client_Interface = new Class({
       self.device_key = data.args.client_key;
     });
 
+    self.ubk.register_cmd('base', 'incomming_video', function(data) {
+      if (self.device_type != 'controler') return;
+      self.ask_playlists(data.args.playlist_path, data.args.filename);
+    });
+
     self.ubk.register_cmd('base', 'launch_video', function(data) {
       if (self.device_type != 'screen') return;
-      document.getElement('#video').src = data.args.filepath;
+      document.getElement('#video').src = data.args.path;
       document.getElement('#video').play();
+      self.videoStatus = 'playing';
+      document.getElement('#video').addEventListener('ended',function() {
+        clearInterval(self.timer);
+        // send last tick
+        var current_time = parseInt(document.getElement('#video').currentTime);
+        self.ubk.send('base', 'send_current_time', {'current_time' : current_time}, function() {});
+      });
+      if (self.timer)
+        clearInterval(self.timer);
+      self.timer = setInterval(function() {
+        var current_time = parseInt(document.getElement('#video').currentTime);
+        self.ubk.send('base', 'send_current_time', {'current_time' : current_time}, function() {});
+      }, 1000);
+    });
+
+    self.ubk.register_cmd('base', 'send_current_time', function(data) {
+      if (self.device_type != 'controler') return;
+      if (!document.getElement('#progress_time')) return;
+      var purcent = parseInt((100 / self.total_time) * data.args.current_time);
+      document.getElement('#progress_time').setStyle('width', purcent + '%');
     });
 
     self.ubk.register_cmd('base', 'send_cmd', function(data){
-      if (!data.args)
-        return;
+      if (self.device_type != 'screen') return;
+      if (!data.args) return;
       if (data.args.play !== undefined) {
         if (data.args.play === true) {
           document.getElement('#video').play();
+          self.videoStatus = 'playing';
         } else {
           document.getElement('#video').pause();
+          self.videoStatus = 'pause';
         }
       }
-      if (data.args.switch) {
-        document.getElement('#video').src = "./outputs/input_mpg.mp4";
-        document.getElement('#video').play();
-      }
       if (data.args.go_to) {
+        console.log('ici', data.args);
         document.getElement('#video').currentTime = data.args.go_to;
         document.getElement('#video').play();
+        self.videoStatus = 'playing';
       }
     });
   },
@@ -128,7 +153,7 @@ var Client_Interface = new Class({
       self.device_type = 'controler';
       var dom = self.render('control_screen');
       dom.inject(document.body.empty());
-      self.ask_playlist();
+      self.ask_playlists();
     });
 
     dom.getElement('#choose_screen').addEvent('click', function() {
@@ -144,21 +169,21 @@ var Client_Interface = new Class({
       self.ubk.send('base', 'send_cmd', {'play' : true}, function() {});
       dom.getElement('#is_pause').setStyle('display', 'none');
       dom.getElement('#is_playing').setStyle('display', 'inline-block');
-      //self.progress_timer = setInterval(self.update_progress, 1000);
     });
     dom.getElement('#is_playing').addEvent('click', function() {
       self.ubk.send('base', 'send_cmd', {'play' : false}, function() {});
       dom.getElement('#is_playing').setStyle('display', 'none');
       dom.getElement('#is_pause').setStyle('display', 'inline-block');
-      //clearInterval(self.progress_timer);
     });
 
-    /*dom.getElement('#go_to').addEvent('click', function() {
-      self.ubk.send('base', 'send_cmd', {'go_to' : 20}, function() {});
-    });*/
-    /*self.progress_bar = dom.getElement('#progress_time'),
-    self.current_time  = 0;
-    self.progress_timer = setInterval(self.update_progress, 1000);*/
+    $('.progress, #progress_time').click(function(e) {
+        var posX = $(this).offset().left, posY = $(this).offset().top;
+        var percent_time = (e.pageX - posX) / this.offsetWidth;
+        var current_time = parseInt(percent_time * self.total_time);
+        self.ubk.send('base', 'go_to', {'current_time' : current_time}, function() {
+          // repositionne progress
+        });
+    });
 
     dom.getElements('.change').addEvent('click', function() {
       var direction = this.get('rel'),
@@ -211,37 +236,50 @@ var Client_Interface = new Class({
     }
   },
 
-  ask_playlist : function() {
+  ask_playlists : function(path, pointer) {
     var self = this;
-    self.ubk.send('base', 'ask_playlist', {}, function(data) {
-      var playlist = document.getElement('#playlists');
-      playlist.innerHTML = data.dom;
 
-      playlist.getElements('.play_video').addEvent('click', function() {
-        playlist.getElements('.play_video').removeClass('active');
+    if (!path)
+      path = self._ROOT_PATH;
+
+    self.ubk.send('base', 'ask_playlists', {'path' : path}, function(data) {
+      var playlist = self.render('playlists_list', {'playlists' : data.playlists});
+
+      if (pointer)
+        playlist.getElement('[rel=' + path + pointer + ']').addClass('fresh');
+
+      playlist.getElements('.show_playlist').addEvent('click', function() {
+        playlist.getElements('.show_playlist').removeClass('active');
         this.addClass('active');
-        // go through server to prepare control device
-        self.ask_video(this.get('rel'));
+        self.ask_playlists(this.get('rel'));
       });
+      playlist.inject(document.getElement('#playlists_container').empty());
+
+      if (data.videos.length == 0)
+        return;
+      var videos = self.render('videos_list', {'videos' : data.videos});
+      videos.getElements('.launch_video').addEvent('click', function() {
+        videos.getElements('.launch_video').removeClass('active');
+        this.addClass('active');
+        self.launch_video(this.get('rel'));
+      });
+
+      videos.inject(document.getElement('#videos_container').empty());
     });
   },
 
-  ask_video : function(filepath) {
-    var self = this;
-    self.ubk.send('base', 'ask_video', {filepath : filepath}, function(data) {
-      console.log('ici', data);
-      self.total_time = data.total_time;
-      self.add_control_panel();
+  launch_video : function(path) {
+    self.ubk.send('base', 'launch_video', {'path' : path}, function(data) {
+      self.add_control_panel(data.total_time);
     });
-    self.playing = filepath;
   },
 
-  add_control_panel : function() {
+  add_control_panel : function(total_time) {
     var self = this,
         dom = self.render('actions_list'),
-        container = document.getElement('#actions_list').empty();
+        container = document.getElement('#actions_container').empty();
+    self.total_time = total_time;
     dom.inject(container);
-
     self.bind_controls(dom);
   }
 
