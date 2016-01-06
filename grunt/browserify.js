@@ -16,6 +16,12 @@ module.exports = function(grunt) {
       files: {
         'front/browserified.js': ['front/app/client.js'],
       }
+    },
+
+    pack_manager : {
+      files: {
+        'server/manager/browserified.js': ['server/manager/app/admin.js'],
+      }
     }
   });
 

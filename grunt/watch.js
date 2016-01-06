@@ -11,6 +11,11 @@ module.exports = function(grunt) {
       tasks: ['pack', 'concat:scripts']
   });
 
+  grunt.config('watch.scripts_manager', {
+      files: ['server/manager/**/*.js', '!server/manager/browserified.js', '!server/manager/app.js'],
+      tasks: ['pack', 'concat:scripts_manager']
+  });
+
   grunt.config('watch.templates', {
       files: ['front/templates/*.xml'],
       tasks: ['concat:templates']

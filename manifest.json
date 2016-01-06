@@ -5,5 +5,12 @@
     "front/libs/jquery/jquery-2.1.4.min.js",
     "front/libs/bootstrap-3.3.6/js/bootstrap.js",
     "front/browserified.js"
+  ],
+  "files_manager" : [
+    "front/libs/mootools/MooTools-Core-1.5.2.js",
+    "front/libs/mootools/MooTools-More-1.5.2-compressed.js",
+    "front/libs/jquery/jquery-2.1.4.min.js",
+    "front/libs/bootstrap-3.3.6/js/bootstrap.js",
+    "server/manager/browserified.js"
   ]
 }

@@ -1,9 +1,9 @@
 var UbkClient  = require('ubk_v2/client/ws'),
     Class      = require('uclass'),
     Events     = require('uclass/events'),
-    Mustache   = require('mustache');
+    Mustache   = require('mustache'),
 
-var Client_Interface = new Class({
+Client_Interface = new Class({
 
   Implements : [Events],
   Binds      : [
@@ -303,6 +303,7 @@ var Client_Interface = new Class({
   }
 
 });
+
 document.addEvent('DOMContentLoaded', function(){
   var ui_controller = new Client_Interface();
 });

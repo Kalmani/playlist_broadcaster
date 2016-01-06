@@ -5,6 +5,7 @@ module.exports = function(grunt) {
 
   var manifest = grunt.config.get('manifest');
   var files = manifest.files;
+  var files_manager = manifest.files_manager;
 
   grunt.config('concat.scripts', {
     options: {
@@ -12,6 +13,14 @@ module.exports = function(grunt) {
     },
     dest: 'front/app.js',
     src: files,
+  });
+
+  grunt.config('concat.scripts_manager', {
+    options: {
+      separator: ';'
+    },
+    dest: 'server/manager/app.js',
+    src: files_manager,
   });
 
   grunt.loadNpmTasks('grunt-contrib-concat');
