@@ -3,22 +3,14 @@ var UbkClient  = require('ubk_v2/client/ws'),
     Events     = require('uclass/events'),
     Mustache   = require('mustache');
 
-XMLDocument.prototype.xpath = function(query, ctx) {
-  var out = [],
-      result = this.evaluate(query, ctx || this, null, XPathResult.ANY_TYPE, null),
-      current = result.iterateNext();
-  while (current) {
-    out.push(current);
-    current = result.iterateNext();
-  }
-  return out;
-};
-
-
 var Client_Interface = new Class({
 
   Implements : [Events],
-  Binds      : ['onconnection', 'ondeconnection', 'update_progress'],
+  Binds      : [
+    'onconnection', 'ondeconnection',
+    'registered_client', 'incomming_video', 'launch_video', 'send_current_time', 'dispatch_cmds',
+    'change_video', 'update_progress'
+  ],
 
   templates   : {},
   playing     : null,
@@ -61,60 +53,72 @@ var Client_Interface = new Class({
   register_command : function() {
     var self = this;
 
-    self.ubk.register_cmd('base', 'registered_client', function(data) {
-      self.device_key = data.args.client_key;
-    });
+    self.ubk.register_cmd('base', 'registered_client', self.registered_client);
 
-    self.ubk.register_cmd('base', 'incomming_video', function(data) {
-      if (self.device_type != 'controler') return;
-      self.ask_playlists(data.args.playlist_path, data.args.filename);
-    });
+    self.ubk.register_cmd('base', 'incomming_video', self.incomming_video);
 
-    self.ubk.register_cmd('base', 'launch_video', function(data) {
-      if (self.device_type != 'screen') return;
-      document.getElement('#video').src = data.args.path;
-      document.getElement('#video').play();
-      self.videoStatus = 'playing';
-      document.getElement('#video').addEventListener('ended',function() {
-        clearInterval(self.timer);
-        // send last tick
-        var current_time = parseInt(document.getElement('#video').currentTime);
-        self.ubk.send('base', 'send_current_time', {'current_time' : current_time}, function() {});
-      });
-      if (self.timer)
-        clearInterval(self.timer);
-      self.timer = setInterval(function() {
-        var current_time = parseInt(document.getElement('#video').currentTime);
-        self.ubk.send('base', 'send_current_time', {'current_time' : current_time}, function() {});
-      }, 1000);
-    });
+    self.ubk.register_cmd('base', 'launch_video', self.launch_video);
+    self.ubk.register_cmd('base', 'send_current_time', self.send_current_time);
+    self.ubk.register_cmd('base', 'send_cmd', self.dispatch_cmds);
+  },
 
-    self.ubk.register_cmd('base', 'send_current_time', function(data) {
-      if (self.device_type != 'controler') return;
-      if (!document.getElement('#progress_time')) return;
-      var purcent = parseInt((100 / self.total_time) * data.args.current_time);
-      document.getElement('#progress_time').setStyle('width', purcent + '%');
-    });
+  registered_client : function(data) {
+    var self = this;
+    self.device_key = data.args.client_key;
+  },
 
-    self.ubk.register_cmd('base', 'send_cmd', function(data){
-      if (self.device_type != 'screen') return;
-      if (!data.args) return;
-      if (data.args.play !== undefined) {
-        if (data.args.play === true) {
-          document.getElement('#video').play();
-          self.videoStatus = 'playing';
-        } else {
-          document.getElement('#video').pause();
-          self.videoStatus = 'pause';
-        }
-      }
-      if (data.args.go_to) {
-        console.log('ici', data.args);
-        document.getElement('#video').currentTime = data.args.go_to;
+  incomming_video : function(data) {
+    if (self.device_type != 'controler') return;
+    self.ask_playlists(data.args.playlist_path, data.args.filename);
+  },
+
+  launch_video : function(data) {
+    var self = this;
+    console.log('ici', self.device_type);
+    if (self.device_type != 'screen') return;
+    document.getElement('#video').src = data.args.path;
+    document.getElement('#video').play();
+    self.videoStatus = 'playing';
+    document.getElement('#video').addEventListener('ended',function() {
+      clearInterval(self.timer);
+      // send last tick
+      var current_time = parseInt(document.getElement('#video').currentTime);
+      self.ubk.send('base', 'send_current_time', {'current_time' : current_time}, function() {});
+    });
+    if (self.timer)
+      clearInterval(self.timer);
+    self.timer = setInterval(function() {
+      var current_time = parseInt(document.getElement('#video').currentTime);
+      self.ubk.send('base', 'send_current_time', {'current_time' : current_time}, function() {});
+    }, 1000);
+  },
+
+  send_current_time : function(data) {
+    var self = this;
+    if (self.device_type != 'controler') return;
+    if (!document.getElement('#progress_time')) return;
+    var purcent = parseInt((100 / self.total_time) * data.args.current_time);
+    document.getElement('#progress_time').setStyle('width', purcent + '%');
+  },
+
+  dispatch_cmds : function(data) {
+    var self = this;
+    if (self.device_type != 'screen') return;
+    if (!data.args) return;
+    if (data.args.play !== undefined) {
+      if (data.args.play === true) {
         document.getElement('#video').play();
         self.videoStatus = 'playing';
+      } else {
+        document.getElement('#video').pause();
+        self.videoStatus = 'pause';
       }
-    });
+    }
+    if (data.args.go_to) {
+      document.getElement('#video').currentTime = data.args.go_to;
+      document.getElement('#video').play();
+      self.videoStatus = 'playing';
+    }
   },
 
   load_templates : function() {
@@ -124,7 +128,7 @@ var Client_Interface = new Class({
       onSuccess : function(txt, xml) {
         var serializer = new XMLSerializer();
 
-        Array.each(xml.xpath("//script[@type='text/template']"), function(node) {
+        Array.each(self.xpath(xml, "//script[@type='text/template']"), function(node) {
           var str = "";
           Array.each(node.childNodes, function(child) {
             str += serializer.serializeToString(child);
@@ -186,28 +190,33 @@ var Client_Interface = new Class({
     });
 
     dom.getElements('.change').addEvent('click', function() {
-      var direction = this.get('rel'),
-          current = null,
-          videos = document.getElements('.play_video');
-      for (var i = 0; i < videos.length; i++) {
-        if (videos[i].get('rel') == self.playing)
-          current = videos[i];
-      }
-
-      if (direction == 'backward') {
-        if (current.getPrevious()) {
-          $(current.getPrevious()).click();
-        } else {
-          $(videos[(videos.length - 1)]).click();
-        }
-      } else {
-        if (current.getNext()) {
-          $(current.getNext()).click();
-        } else {
-          $(videos[0]).click();
-        }
-      }
+      var btn = this;
+      self.change_video(btn.get('rel'));
     });
+  },
+
+  change_video : function(direction) {
+    var self = this,
+        current = null,
+        videos = document.getElements('.play_video');
+    for (var i = 0; i < videos.length; i++) {
+      if (videos[i].get('rel') == self.playing)
+        current = videos[i];
+    }
+
+    if (direction == 'backward') {
+      if (current.getPrevious()) {
+        $(current.getPrevious()).click();
+      } else {
+        $(videos[(videos.length - 1)]).click();
+      }
+    } else {
+      if (current.getNext()) {
+        $(current.getNext()).click();
+      } else {
+        $(videos[0]).click();
+      }
+    }
   },
 
   update_progress : function() {
@@ -220,7 +229,6 @@ var Client_Interface = new Class({
     if (purcent < 100) return;
 
     clearInterval(self.progress_timer);
-
 
     // USE EVENT STOP ON VIDEO INSTEAD
     var current = null,
@@ -261,14 +269,14 @@ var Client_Interface = new Class({
       videos.getElements('.launch_video').addEvent('click', function() {
         videos.getElements('.launch_video').removeClass('active');
         this.addClass('active');
-        self.launch_video(this.get('rel'));
+        self.launch_video_control(this.get('rel'));
       });
 
       videos.inject(document.getElement('#videos_container').empty());
     });
   },
 
-  launch_video : function(path) {
+  launch_video_control : function(path) {
     self.ubk.send('base', 'launch_video', {'path' : path}, function(data) {
       self.add_control_panel(data.total_time);
     });
@@ -281,6 +289,17 @@ var Client_Interface = new Class({
     self.total_time = total_time;
     dom.inject(container);
     self.bind_controls(dom);
+  },
+
+  xpath : function(xml, query, ctx) {
+    var out = [],
+        result = xml.evaluate(query, ctx || xml, null, XPathResult.ANY_TYPE, null),
+        current = result.iterateNext();
+    while (current) {
+      out.push(current);
+      current = result.iterateNext();
+    }
+    return out;
   }
 
 });
